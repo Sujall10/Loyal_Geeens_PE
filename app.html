@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peter England | Men's Fashion & Apparel</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- GSAP for Animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --cursor-size: 20px;
+            --cursor-hover-size: 60px;
+            --pe-blue: #002349;
+            --pe-gold: #c6a87c;
+            --bg-off-white: #f9f9f9;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            background-color: #ffffff;
+            color: #1a1a1a;
+            cursor: none; /* Hide default cursor */
+            -webkit-font-smoothing: antialiased;
+        }
+
+        h1, h2, h3, h4, .serif {
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* Custom Cursor */
+        .cursor-dot,
+        .cursor-outline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        .cursor-dot {
+            width: 6px;
+            height: 6px;
+            background-color: var(--pe-blue);
+        }
+
+        .cursor-outline {
+            width: var(--cursor-size);
+            height: var(--cursor-size);
+            border: 1px solid rgba(0, 35, 73, 0.3);
+            transition: width 0.2s, height 0.2s, background-color 0.2s, border-color 0.2s;
+        }
+
+        body.hovering .cursor-outline {
+            width: var(--cursor-hover-size);
+            height: var(--cursor-hover-size);
+            background-color: rgba(198, 168, 124, 0.1);
+            border-color: var(--pe-gold);
+            mix-blend-mode: multiply;
+        }
+
+        /* Utilities */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .img-zoom-container {
+            overflow: hidden;
+        }
+        .img-zoom-container img {
+            transition: transform 1.2s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+        .img-zoom-container:hover img {
+            transform: scale(1.05);
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 1px;
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--pe-blue);
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        /* Page Transitions */
+        #app-container {
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.4s ease;
+        }
+        #app-container.loaded {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Mobile Menu */
+        #mobile-menu {
+            transform: translateX(-100%);
+            transition: transform 0.5s cubic-bezier(0.77, 0, 0.175, 1);
+        }
+        #mobile-menu.open {
+            transform: translateX(0);
+        }
+
+        /* Toast Notification */
+        #toast {
+            transform: translateY(100%);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        #toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* Loader */
+        #loader {
+            position: fixed;
+            inset: 0;
+            background: #fff;
+            z-index: 10000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        .loader-bar {
+            width: 0%;
+            height: 2px;
+            background: var(--pe-blue);
+            transition: width 0.5s ease;
+        }
+        
+        /* Premium Text Selection */
+        ::selection {
+            background: rgba(198, 168, 124, 0.3);
+            color: var(--pe-blue);
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-orange-100 selection:text-orange-900">
+
+    <!-- Custom Cursor Elements -->
+    <div class="cursor-dot hidden md:block"></div>
+    <div class="cursor-outline hidden md:block"></div>
+
+    <!-- Initial Loader -->
+    <div id="loader">
+        <h1 class="text-2xl md:text-4xl font-bold tracking-[0.2em] mb-6 text-[#002349] animate-pulse">PETER ENGLAND</h1>
+        <div class="w-48 md:w-64 h-[1px] bg-gray-100 overflow-hidden">
+            <div class="loader-bar h-full"></div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] bg-[#002349] text-white px-6 py-3 rounded shadow-2xl flex items-center gap-3 min-w-[300px]">
+        <i data-lucide="check-circle" class="w-5 h-5 text-[#c6a87c]"></i>
+        <span id="toast-message" class="text-sm font-medium tracking-wide">Item added to bag</span>
+    </div>
+
+    <!-- Mobile Menu Overlay -->
+    <div id="mobile-menu" class="fixed inset-0 z-[60] bg-white flex flex-col h-screen w-full md:hidden">
+        <div class="flex justify-between items-center p-4 border-b border-gray-100">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/Peter_England_logo.png/640px-Peter_England_logo.png" alt="Logo" class="h-6">
+            <button onclick="toggleMobileMenu()" class="p-2">
+                <i data-lucide="x" class="w-6 h-6 text-[#002349]"></i>
+            </button>
+        </div>
+        <div class="flex flex-col p-8 space-y-6 text-center">
+            <a onclick="router.navigate('home')" class="text-2xl font-serif text-[#002349] hover:text-[#c6a87c] transition-colors">Home</a>
+            <a onclick="router.navigate('catalog', 'shirts')" class="text-2xl font-serif text-[#002349] hover:text-[#c6a87c] transition-colors">Shirts</a>
+            <a onclick="router.navigate('catalog', 'suits')" class="text-2xl font-serif text-[#002349] hover:text-[#c6a87c] transition-colors">Suits</a>
+            <a onclick="router.navigate('catalog', 'trousers')" class="text-2xl font-serif text-[#002349] hover:text-[#c6a87c] transition-colors">Trousers</a>
+            <a onclick="router.navigate('catalog', 'new')" class="text-2xl font-serif text-red-700">Sale</a>
+        </div>
+        <div class="mt-auto bg-gray-50 p-6 space-y-4">
+             <button class="w-full py-3 border border-[#002349] text-[#002349] uppercase tracking-wider text-xs font-bold">Sign In</button>
+             <div class="flex justify-center gap-6 text-gray-400">
+                <i data-lucide="instagram" class="w-5 h-5"></i>
+                <i data-lucide="facebook" class="w-5 h-5"></i>
+                <i data-lucide="twitter" class="w-5 h-5"></i>
+             </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 transition-all duration-500 bg-white/95 backdrop-blur-sm border-b border-gray-100/50" id="navbar">
+        <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <!-- Mobile Menu Trigger -->
+                <button class="md:hidden hoverable p-2" onclick="toggleMobileMenu()">
+                    <i data-lucide="menu" class="w-6 h-6 text-[#002349]"></i>
+                </button>
+
+                <!-- Logo -->
+                <div class="flex-shrink-0 flex items-center cursor-pointer hoverable group" onclick="router.navigate('home')">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/Peter_England_logo.png/640px-Peter_England_logo.png" alt="Peter England" class="h-6 md:h-8 object-contain group-hover:opacity-80 transition-opacity">
+                </div>
+
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex space-x-10 items-center">
+                    <a onclick="router.navigate('home')" class="hoverable nav-link relative text-xs font-semibold text-gray-900 tracking-[0.1em] cursor-pointer uppercase">Home</a>
+                    <a onclick="router.navigate('catalog', 'shirts')" class="hoverable nav-link relative text-xs font-semibold text-gray-900 tracking-[0.1em] cursor-pointer uppercase">Shirts</a>
+                    <a onclick="router.navigate('catalog', 'suits')" class="hoverable nav-link relative text-xs font-semibold text-gray-900 tracking-[0.1em] cursor-pointer uppercase">Suits</a>
+                    <a onclick="router.navigate('catalog', 'trousers')" class="hoverable nav-link relative text-xs font-semibold text-gray-900 tracking-[0.1em] cursor-pointer uppercase">Trousers</a>
+                    <a onclick="router.navigate('catalog', 'new')" class="hoverable nav-link relative text-xs font-bold text-red-800 tracking-[0.1em] cursor-pointer uppercase">Sale</a>
+                </div>
+
+                <!-- Icons -->
+                <div class="flex items-center space-x-6">
+                    <button class="hoverable text-gray-600 hover:text-[#002349] transition-transform hover:scale-110 duration-300" onclick="showToast('Search functionality coming soon')"><i data-lucide="search" class="w-5 h-5"></i></button>
+                    <button class="hoverable text-gray-600 hover:text-[#002349] transition-transform hover:scale-110 duration-300" onclick="showToast('Wishlist feature coming soon')"><i data-lucide="heart" class="w-5 h-5"></i></button>
+                    <button class="hoverable relative text-gray-600 hover:text-[#002349] transition-transform hover:scale-110 duration-300" onclick="showToast('Shopping bag is empty')">
+                        <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+                        <span class="absolute -top-1 -right-1 w-2 h-2 bg-[#c6a87c] rounded-full"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main App Content Area -->
+    <main id="app-container" class="pt-20 min-h-screen flex flex-col bg-white">
+        <!-- Content injected via JS -->
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-[#002349] text-white pt-20 pb-10">
+        <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+                <div class="space-y-6">
+                    <h3 class="serif text-3xl tracking-wider">Peter England</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed max-w-xs">Defining men's fashion since 1889. Experience the legacy of fine tailoring, premium fabrics, and modern aesthetics designed for the global citizen.</p>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-6 tracking-[0.15em] text-xs uppercase text-[#c6a87c]">Collections</h4>
+                    <ul class="space-y-3 text-gray-400 text-sm">
+                        <li><a href="#" class="hover:text-white hoverable transition-colors">New Arrivals</a></li>
+                        <li><a href="#" class="hover:text-white hoverable transition-colors">The Wedding Edit</a></li>
+                        <li><a href="#" class="hover:text-white hoverable transition-colors">Workplace Essentials</a></li>
+                        <li><a href="#" class="hover:text-white hoverable transition-colors">Casual Weekend</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-6 tracking-[0.15em] text-xs uppercase text-[#c6a87c]">Support</h4>
+                    <ul class="space-y-3 text-gray-400 text-sm">
+                        <li><a href="#" class="hover:text-white hoverable transition-colors">Track Order</a></li>
+                        <li><a href="#" class="hover:text-white hoverable transition-colors">Returns & Exchange</a></li>
+                        <li><a href="#" class="hover:text-white hoverable transition-colors">Size Guide</a></li>
+                        <li><a href="#" class="hover:text-white hoverable transition-colors">Contact Us</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-6 tracking-[0.15em] text-xs uppercase text-[#c6a87c]">Newsletter</h4>
+                    <p class="text-gray-400 text-sm mb-4">Subscribe to receive updates, access to exclusive deals, and more.</p>
+                    <div class="flex border-b border-gray-600 pb-2">
+                        <input type="email" placeholder="Enter your email" class="bg-transparent w-full outline-none text-white placeholder-gray-500 text-sm">
+                        <button class="text-[#c6a87c] hover:text-white hoverable text-xs font-bold uppercase tracking-wider transition-colors">JOIN</button>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-gray-500 gap-4">
+                <p>&copy; 2024 Peter England. All rights reserved.</p>
+                <div class="flex space-x-6">
+                    <span class="hoverable cursor-pointer hover:text-white transition-colors">Privacy Policy</span>
+                    <span class="hoverable cursor-pointer hover:text-white transition-colors">Terms of Use</span>
+                    <span class="hoverable cursor-pointer hover:text-white transition-colors">Sitemap</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // --- DATA STORE ---
+        const db = {
+            products: [
+                { id: 1, name: "Navy Slim Fit Suit", category: "suits", price: "₹9,999", image: "https://images.unsplash.com/photo-1594938298603-c8148c472997?q=80&w=800&auto=format&fit=crop", tag: "Best Seller" },
+                { id: 2, name: "Classic White Formal Shirt", category: "shirts", price: "₹2,499", image: "https://images.unsplash.com/photo-1620012253295-c15cc3fe5d1d?q=80&w=800&auto=format&fit=crop", tag: "New" },
+                { id: 3, name: "Charcoal Grey Trousers", category: "trousers", price: "₹2,999", image: "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?q=80&w=800&auto=format&fit=crop" },
+                { id: 4, name: "Beige Linen Blazer", category: "suits", price: "₹7,499", image: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&w=800&auto=format&fit=crop" },
+                { id: 5, name: "Checkered Casual Shirt", category: "shirts", price: "₹1,899", image: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?q=80&w=800&auto=format&fit=crop" },
+                { id: 6, name: "Slim Fit Chinos", category: "trousers", price: "₹2,299", image: "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?q=80&w=800&auto=format&fit=crop", tag: "Trending" },
+                { id: 7, name: "Royal Blue Wedding Suit", category: "suits", price: "₹12,999", image: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=800&auto=format&fit=crop" },
+                { id: 8, name: "Striped Office Shirt", category: "shirts", price: "₹2,199", image: "https://images.unsplash.com/photo-1589712073990-25272a275464?q=80&w=800&auto=format&fit=crop" },
+                { id: 9, name: "Tuxedo Jacket Black", category: "suits", price: "₹14,999", image: "https://images.unsplash.com/photo-1505022610485-0249ba5b3675?q=80&w=800&auto=format&fit=crop", tag: "Exclusive" },
+                { id: 10, name: "Oxford Blue Shirt", category: "shirts", price: "₹2,099", image: "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?q=80&w=800&auto=format&fit=crop" },
+            ]
+        };
+
+        // --- COMPONENTS ---
+
+        const Components = {
+            hero: () => `
+                <section class="relative w-full h-[90vh] overflow-hidden bg-gray-900">
+                    <div class="absolute inset-0">
+                        <img src="https://images.unsplash.com/photo-1490114538077-0a7f8cb49891?q=80&w=2670&auto=format&fit=crop" 
+                             class="w-full h-full object-cover object-top opacity-80 scale-105 transform origin-center" id="hero-img" alt="Hero">
+                        <div class="absolute inset-0 bg-black/20"></div>
+                    </div>
+                    <div class="absolute inset-0 flex flex-col justify-center items-center text-white text-center px-4 max-w-5xl mx-auto z-10">
+                        <h2 class="hero-text text-xs md:text-sm font-bold tracking-[0.4em] mb-6 uppercase text-[#c6a87c] opacity-0 translate-y-4">The Wedding Collection 2024</h2>
+                        <h1 class="hero-text serif text-5xl md:text-7xl lg:text-8xl mb-8 opacity-0 translate-y-8 leading-tight">Elegance <br class="md:hidden">Redefined</h1>
+                        <p class="hero-text text-gray-200 max-w-lg mx-auto mb-10 text-sm md:text-base leading-relaxed opacity-0 translate-y-4 font-light">
+                            Impeccable tailoring meets contemporary design. Discover the new standard of sophistication.
+                        </p>
+                        <div class="hero-text opacity-0 translate-y-4 flex flex-col md:flex-row gap-4">
+                            <button onclick="router.navigate('catalog')" 
+                                    class="hoverable group relative px-10 py-4 bg-white text-[#002349] font-bold text-xs tracking-[0.15em] overflow-hidden transition-all hover:bg-[#c6a87c] hover:text-white uppercase shadow-lg">
+                                <span class="relative z-10">Explore Collection</span>
+                            </button>
+                            <button onclick="router.navigate('catalog', 'new')" 
+                                    class="hoverable group relative px-10 py-4 border border-white text-white font-bold text-xs tracking-[0.15em] overflow-hidden transition-all hover:bg-white hover:text-[#002349] uppercase">
+                                <span class="relative z-10">View Lookbook</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Scroll Indicator -->
+                    <div class="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce text-white/50 hidden md:block">
+                        <i data-lucide="chevron-down" class="w-6 h-6"></i>
+                    </div>
+                </section>
+            `,
+
+            categories: () => `
+                <section class="py-24 bg-[#fcfcfc]">
+                    <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
+                        <div class="text-center mb-16 scroll-reveal">
+                            <span class="text-[#c6a87c] text-xs font-bold tracking-[0.2em] uppercase block mb-3">Essentials</span>
+                            <h3 class="serif text-3xl md:text-5xl text-[#002349]">Shop By Category</h3>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+                            ${['Shirts', 'Suits', 'Trousers', 'Jackets'].map((cat, idx) => `
+                                <div class="scroll-reveal group cursor-pointer hoverable relative overflow-hidden" onclick="router.navigate('catalog', '${cat.toLowerCase()}')">
+                                    <div class="aspect-[3/4] overflow-hidden mb-5 relative">
+                                        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500 z-10"></div>
+                                        <img src="${getCategoryImg(cat)}" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt="${cat}">
+                                        <div class="absolute bottom-6 left-0 right-0 text-center z-20 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
+                                            <span class="inline-block px-4 py-2 bg-white/90 text-[#002349] text-xs font-bold tracking-widest uppercase">Shop Now</span>
+                                        </div>
+                                    </div>
+                                    <h4 class="text-center font-serif text-xl text-gray-900 group-hover:text-[#c6a87c] transition-colors">${cat}</h4>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </section>
+            `,
+
+            featured: () => `
+                <section class="py-24 bg-white">
+                    <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
+                        <div class="flex flex-col md:flex-row justify-between items-end mb-12 scroll-reveal gap-4">
+                            <div>
+                                <h3 class="serif text-3xl md:text-5xl text-[#002349] mb-3">Trending Now</h3>
+                                <p class="text-gray-500 font-light">Curated picks for the modern gentleman</p>
+                            </div>
+                            <button onclick="router.navigate('catalog')" class="hoverable hidden md:flex items-center gap-2 text-[#002349] font-medium text-sm hover:text-[#c6a87c] transition-colors group">
+                                View All Products <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                            ${db.products.slice(0, 4).map(product => Components.productCard(product)).join('')}
+                        </div>
+                        <div class="mt-12 text-center md:hidden">
+                             <button onclick="router.navigate('catalog')" class="hoverable px-8 py-4 border border-[#002349] text-[#002349] text-xs font-bold tracking-widest uppercase w-full">View All Products</button>
+                        </div>
+                    </div>
+                </section>
+            `,
+
+            banner: () => `
+                <section class="py-24 bg-[#f4f4f4]">
+                    <div class="max-w-[1440px] mx-auto px-4 md:px-8">
+                        <div class="relative h-[60vh] md:h-[70vh] w-full overflow-hidden">
+                            <img src="https://images.unsplash.com/photo-1497339100210-9e87df79c218?q=80&w=2670&auto=format&fit=crop" class="absolute inset-0 w-full h-full object-cover" alt="Banner">
+                            <div class="absolute inset-0 bg-gradient-to-r from-[#002349]/95 via-[#002349]/60 to-transparent flex items-center">
+                                <div class="max-w-7xl mx-auto px-8 md:px-12 w-full">
+                                    <div class="max-w-xl text-white scroll-reveal">
+                                        <span class="block text-[#c6a87c] text-xs font-bold tracking-[0.2em] uppercase mb-4">Membership</span>
+                                        <h2 class="serif text-4xl md:text-6xl mb-6 leading-tight">The Elite Club</h2>
+                                        <p class="text-lg mb-10 text-gray-300 font-light leading-relaxed">Join our loyalty program and get exclusive access to new launches, styling sessions, and members-only discounts.</p>
+                                        <button onclick="showToast('Membership page under construction')" class="hoverable px-10 py-4 bg-white text-[#002349] font-bold text-xs tracking-[0.15em] hover:bg-[#c6a87c] hover:text-white transition-colors uppercase">
+                                            Discover Privileges
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            `,
+
+            catalog: (filter = 'all') => {
+                const filtered = filter === 'all' || filter === 'new' 
+                    ? db.products 
+                    : db.products.filter(p => p.category === filter);
+                
+                return `
+                <div class="pt-10 pb-20 max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 min-h-screen">
+                    <!-- Breadcrumbs & Header -->
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 fade-in-up border-b border-gray-100 pb-8">
+                        <div>
+                            <p class="text-xs text-gray-400 mb-3 uppercase tracking-widest font-semibold">Home / Catalog / ${filter}</p>
+                            <h2 class="serif text-4xl md:text-5xl text-[#002349] capitalize">${filter === 'new' ? 'New Arrivals' : filter + ' Collection'}</h2>
+                        </div>
+                        <div class="mt-6 md:mt-0 flex gap-6 items-center w-full md:w-auto">
+                            <span class="text-sm text-gray-500 whitespace-nowrap">${filtered.length} Items</span>
+                            <div class="relative w-full md:w-48">
+                                <select onchange="router.navigate('catalog', this.value)" class="hoverable appearance-none bg-transparent border-b border-gray-300 py-2 w-full outline-none text-sm cursor-pointer font-medium text-gray-800 focus:border-[#002349] transition-colors">
+                                    <option value="all" ${filter === 'all' ? 'selected' : ''}>All Categories</option>
+                                    <option value="shirts" ${filter === 'shirts' ? 'selected' : ''}>Shirts</option>
+                                    <option value="suits" ${filter === 'suits' ? 'selected' : ''}>Suits</option>
+                                    <option value="trousers" ${filter === 'trousers' ? 'selected' : ''}>Trousers</option>
+                                </select>
+                                <i data-lucide="chevron-down" class="w-4 h-4 absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${filtered.length === 0 ? 
+                        `<div class="text-center py-32 bg-gray-50 rounded-lg">
+                            <p class="text-gray-500 text-lg serif">No products found in this category.</p>
+                            <button onclick="router.navigate('catalog')" class="mt-4 text-[#002349] underline hover:text-[#c6a87c]">View all products</button>
+                        </div>` : 
+                        `<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-12">
+                            ${filtered.map(p => Components.productCard(p)).join('')}
+                        </div>`
+                    }
+                </div>
+                `;
+            },
+
+            productCard: (product) => `
+                <div class="group cursor-pointer hoverable scroll-reveal flex flex-col h-full" onclick="router.navigate('product', ${product.id})">
+                    <div class="relative overflow-hidden aspect-[3/4] mb-5 bg-gray-100 w-full">
+                        ${product.tag ? `<span class="absolute top-0 left-0 bg-[#002349] text-white text-[10px] font-bold px-3 py-1.5 uppercase tracking-widest z-10">${product.tag}</span>` : ''}
+                        
+                        <img src="${product.image}" alt="${product.name}" class="w-full h-full object-cover transition-transform duration-1000 ease-out group-hover:scale-110">
+                        
+                        <!-- Quick Actions Overlay -->
+                        <div class="absolute bottom-4 left-4 right-4 flex gap-2 translate-y-full opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+                             <button class="flex-1 bg-white text-[#002349] py-3 text-xs font-bold uppercase tracking-wider hover:bg-[#c6a87c] hover:text-white transition-colors shadow-lg" onclick="event.stopPropagation(); showToast('Quick view not available')">Quick View</button>
+                        </div>
+                    </div>
+                    <div class="mt-auto">
+                        <h3 class="text-base text-gray-900 group-hover:text-[#002349] transition-colors font-medium leading-snug">${product.name}</h3>
+                        <div class="flex justify-between items-center mt-2 border-t border-gray-100 pt-2">
+                            <p class="text-sm text-gray-500 font-serif italic">${product.price}</p>
+                            <span class="text-xs text-[#c6a87c] font-bold uppercase tracking-wider group-hover:underline">Shop Now</span>
+                        </div>
+                    </div>
+                </div>
+            `,
+
+            productDetail: (id) => {
+                const product = db.products.find(p => p.id == id);
+                if (!product) return `<div class="pt-32 text-center text-xl serif">Product not found</div>`;
+
+                return `
+                <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-12 min-h-screen">
+                    <div class="mb-8 fade-in-up">
+                        <button onclick="window.history.back()" class="hoverable inline-flex items-center text-xs font-bold tracking-widest text-gray-500 hover:text-[#002349] uppercase group">
+                            <i data-lucide="arrow-left" class="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform"></i> Back to Catalog
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
+                        <!-- Images Gallery -->
+                        <div class="lg:col-span-7 grid grid-cols-1 md:grid-cols-2 gap-4 fade-in-up">
+                            <div class="md:col-span-2 aspect-[4/5] img-zoom-container cursor-crosshair bg-gray-100 relative overflow-hidden group">
+                                <img src="${product.image}" class="w-full h-full object-cover" alt="${product.name}">
+                                <div class="absolute inset-0 pointer-events-none flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <span class="bg-white/80 backdrop-blur px-3 py-1 text-xs uppercase tracking-widest">Hover to Zoom</span>
+                                </div>
+                            </div>
+                            <div class="aspect-square bg-gray-100 overflow-hidden cursor-pointer img-zoom-container">
+                                <img src="${product.image}" class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500" alt="Detail 1">
+                            </div>
+                            <div class="aspect-square bg-gray-100 overflow-hidden cursor-pointer img-zoom-container">
+                                <img src="https://images.unsplash.com/photo-1516257984-b1b4d8c9230c?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500" alt="Detail 2">
+                            </div>
+                        </div>
+
+                        <!-- Product Info -->
+                        <div class="lg:col-span-5 fade-in-up" style="animation-delay: 0.2s">
+                            <div class="lg:sticky lg:top-28">
+                                <span class="text-[#c6a87c] font-bold tracking-[0.2em] text-xs uppercase mb-4 block">Peter England Premium</span>
+                                <h1 class="serif text-4xl md:text-5xl text-[#002349] mb-4 leading-tight">${product.name}</h1>
+                                <p class="text-2xl text-gray-600 mb-8 font-serif italic">${product.price}</p>
+                                
+                                <div class="prose text-gray-500 mb-8 leading-relaxed font-light text-sm md:text-base">
+                                    <p>Expertly crafted for the modern man. This piece combines timeless elegance with contemporary tailoring. Made from the finest fabrics to ensure comfort and durability throughout your day.</p>
+                                </div>
+
+                                <div class="mb-10">
+                                    <div class="flex justify-between items-center mb-4">
+                                        <h4 class="text-xs font-bold uppercase tracking-wider text-gray-900">Select Size</h4>
+                                        <button class="text-xs text-gray-500 underline hover:text-[#002349] hoverable">Size Guide</button>
+                                    </div>
+                                    <div class="flex gap-3 flex-wrap">
+                                        ${['38', '40', '42', '44', '46'].map((size, i) => `
+                                            <button class="hoverable w-12 h-12 border ${i===1 ? 'border-[#002349] bg-[#002349] text-white' : 'border-gray-200 text-gray-600'} flex items-center justify-center hover:border-[#002349] hover:bg-[#002349] hover:text-white transition-all text-sm font-medium">
+                                                ${size}
+                                            </button>
+                                        `).join('')}
+                                    </div>
+                                </div>
+
+                                <div class="flex gap-4 mb-8">
+                                    <button onclick="addToBag('${product.name}')" class="hoverable flex-1 bg-[#002349] text-white py-4 font-bold text-xs tracking-[0.2em] uppercase hover:bg-[#1a3a5f] transition-all shadow-xl hover:shadow-2xl active:scale-95">
+                                        Add to Bag
+                                    </button>
+                                    <button class="hoverable w-14 flex items-center justify-center border border-gray-200 hover:border-[#c6a87c] text-gray-600 hover:text-[#c6a87c] transition-colors" onclick="showToast('Added to Wishlist')">
+                                        <i data-lucide="heart"></i>
+                                    </button>
+                                </div>
+
+                                <div class="border-t border-gray-100 pt-8 space-y-5">
+                                    <div class="flex items-start gap-4">
+                                        <div class="p-2 bg-gray-50 rounded-full"><i data-lucide="truck" class="w-4 h-4 text-[#002349]"></i></div>
+                                        <div>
+                                            <h5 class="text-sm font-bold text-gray-900">Free Delivery</h5>
+                                            <p class="text-xs text-gray-500 mt-1">Free standard shipping on orders over ₹1499.</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start gap-4">
+                                        <div class="p-2 bg-gray-50 rounded-full"><i data-lucide="shield-check" class="w-4 h-4 text-[#002349]"></i></div>
+                                        <div>
+                                            <h5 class="text-sm font-bold text-gray-900">Authenticity Guaranteed</h5>
+                                            <p class="text-xs text-gray-500 mt-1">100% original products directly from the brand.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `;
+            }
+        };
+
+        // --- HELPER FUNCTIONS ---
+        function getCategoryImg(cat) {
+            const map = {
+                'Shirts': 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?q=80&w=800&auto=format&fit=crop',
+                'Suits': 'https://images.unsplash.com/photo-1593032465175-481ac7f401a0?q=80&w=800&auto=format&fit=crop',
+                'Trousers': 'https://images.unsplash.com/photo-1473966968600-fa801b869a1a?q=80&w=800&auto=format&fit=crop',
+                'Jackets': 'https://images.unsplash.com/photo-1559551409-dadc959f76b8?q=80&w=800&auto=format&fit=crop'
+            };
+            return map[cat] || map['Shirts'];
+        }
+
+        // --- TOAST NOTIFICATION ---
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            toastMsg.innerText = msg;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function addToBag(productName) {
+            showToast(`Added ${productName} to bag`);
+        }
+
+        // --- MOBILE MENU LOGIC ---
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('open');
+            // Prevent body scroll when menu is open
+            document.body.style.overflow = menu.classList.contains('open') ? 'hidden' : 'auto';
+        }
+
+        // --- ROUTER & APP LOGIC ---
+        const router = {
+            navigate: (page, param = null) => {
+                // Close mobile menu if open
+                const menu = document.getElementById('mobile-menu');
+                if (menu.classList.contains('open')) {
+                    toggleMobileMenu();
+                }
+
+                // Initial Transition Out
+                gsap.to('#app-container', {
+                    opacity: 0,
+                    y: -20,
+                    duration: 0.4,
+                    ease: "power2.inOut",
+                    onComplete: () => {
+                        window.scrollTo(0, 0);
+                        router.render(page, param);
+                        // Transition In
+                        gsap.fromTo('#app-container', 
+                            { opacity: 0, y: 30, visibility: 'visible' },
+                            { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }
+                        );
+                    }
+                });
+            },
+
+            render: (page, param) => {
+                const app = document.getElementById('app-container');
+                let content = '';
+
+                switch(page) {
+                    case 'home':
+                        content = Components.hero() + Components.categories() + Components.featured() + Components.banner();
+                        break;
+                    case 'catalog':
+                        content = Components.catalog(param || 'all');
+                        break;
+                    case 'product':
+                        content = Components.productDetail(param);
+                        break;
+                    default:
+                        content = Components.hero() + Components.categories() + Components.featured();
+                }
+
+                app.innerHTML = content;
+                lucide.createIcons();
+                initAnimations();
+            }
+        };
+
+        // --- ANIMATION CONTROLLER ---
+        function initAnimations() {
+            // Scroll Reveal
+            gsap.utils.toArray('.scroll-reveal').forEach(elem => {
+                gsap.fromTo(elem, 
+                    { opacity: 0, y: 60 },
+                    {
+                        scrollTrigger: {
+                            trigger: elem,
+                            start: "top 85%",
+                        },
+                        opacity: 1,
+                        y: 0,
+                        duration: 1,
+                        ease: "power3.out"
+                    }
+                );
+            });
+
+            // Hero Animation if present
+            if(document.querySelector('.hero-text')) {
+                const tl = gsap.timeline();
+                tl.to('.hero-text', {
+                    opacity: 1,
+                    y: 0,
+                    duration: 1.2,
+                    stagger: 0.15,
+                    ease: "power3.out",
+                    delay: 0.1
+                });
+                
+                // Parallax Hero Image
+                gsap.to("#hero-img", {
+                    scrollTrigger: {
+                        trigger: "body",
+                        start: "top top",
+                        end: "bottom top",
+                        scrub: true
+                    },
+                    y: 150,
+                    scale: 1.1,
+                    ease: "none"
+                });
+            }
+        }
+
+        // --- CURSOR LOGIC ---
+        const cursorDot = document.querySelector('.cursor-dot');
+        const cursorOutline = document.querySelector('.cursor-outline');
+
+        window.addEventListener('mousemove', (e) => {
+            const posX = e.clientX;
+            const posY = e.clientY;
+
+            // Dot follows instantly
+            cursorDot.style.left = `${posX}px`;
+            cursorDot.style.top = `${posY}px`;
+
+            // Outline follows with lag
+            cursorOutline.animate({
+                left: `${posX}px`,
+                top: `${posY}px`
+            }, { duration: 500, fill: "forwards" });
+        });
+
+        // Add hover effect logic via delegation
+        document.body.addEventListener('mouseover', (e) => {
+            if(e.target.closest('.hoverable')) {
+                document.body.classList.add('hovering');
+            } else {
+                document.body.classList.remove('hovering');
+            }
+        });
+
+        // --- INITIALIZATION ---
+        window.addEventListener('load', () => {
+            const loader = document.getElementById('loader');
+            const bar = document.querySelector('.loader-bar');
+            
+            // Fake loading progress
+            setTimeout(() => bar.style.width = "100%", 100);
+            
+            setTimeout(() => {
+                gsap.to(loader, {
+                    yPercent: -100,
+                    duration: 1,
+                    ease: "power4.inOut",
+                    onComplete: () => {
+                        router.render('home');
+                        document.getElementById('app-container').classList.add('loaded');
+                    }
+                });
+            }, 1200);
+        });
+
+        // Navbar Scroll Effect
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            if(window.scrollY > 50) {
+                nav.classList.add('shadow-md');
+                nav.classList.add('bg-white');
+                nav.classList.remove('bg-white/95');
+                nav.classList.replace('h-20', 'h-16');
+            } else {
+                nav.classList.remove('shadow-md');
+                nav.classList.remove('bg-white');
+                nav.classList.add('bg-white/95');
+                nav.classList.replace('h-16', 'h-20');
+            }
+        });
+
+    </script>
+</body>
+</html>
